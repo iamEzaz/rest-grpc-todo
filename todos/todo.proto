@@ -8,6 +8,7 @@ service TodoService {
     rpc CreateTodo(CreateTodoRequest) returns (Todo) {}
     rpc GetAllTodos(GetAllTodosRequest) returns (GetAllTodosResponse) {}
     rpc StreamTodos(GetAllTodosRequest) returns (stream Todo) {}
+    rpc DeleteTodos(GetAllTodosRequest) returns (Todo) {}
 }
 
 message CreateTodoRequest {

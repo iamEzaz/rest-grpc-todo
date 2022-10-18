@@ -4,69 +4,56 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 
 	"google.golang.org/grpc"
 
 	"log"
 
+	"github.com/gorilla/mux"
 	pb "github.com/iamEzaz/grpc-client"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
 
-	log.Println("Dialng to port 8080")
-	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
-	c := pb.NewTodoServiceClient(conn)
+	router := mux.NewRouter()
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		dialOption := grpc.WithTransportCredentials(insecure.NewCredentials())
+		conn, err := grpc.Dial("localhost:8080", dialOption)
+		if err != nil {
+			log.Fatalf("did not connect: %v", err)
+		}
 
-	//call CreateTodo
-	log.Println("CreateTodo")
-	r, err := c.CreateTodo(context.Background(), &pb.CreateTodoRequest{
-		Title: "Laundry",
-		Text:  "Do laundry",
-	})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
-	}
-	log.Printf("\nCreated todo: %s\n %s\n%s", r.GetId(), r.GetTitle(), r.GetText())
+		c := pb.NewTodoServiceClient(conn)
 
-	rr, err := c.CreateTodo(context.Background(), &pb.CreateTodoRequest{
-		Title: "Study",
-		Text:  "Do study",
-	})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
-	}
+		log.Println("CreateTodo")
 
-	//log response
-	log.Printf("\nCreated todo: %s\n %s\n%s", rr.GetId(), rr.GetTitle(), rr.GetText())
+		rr, err := c.CreateTodo(context.Background(), &pb.CreateTodoRequest{
+			Title: "Study",
+			Text:  "Do study",
+		})
+		if err != nil {
+			log.Fatalf("could not greet: %v", err)
+		}
 
-	//use getToDo by id 1
-	log.Println("\n\n FEtching all todos")
-	rrr, err := c.GetAllTodos(context.Background(), &pb.GetAllTodosRequest{})
-	if err != nil {
-		log.Fatalf("could not found todos due to %v", err)
-	}
-	log.Printf("\n All todos are : %s", rrr.Todos)
+		//log response
+		log.Printf("\nCreated todo: %s\n %s\n%s", rr.GetId(), rr.GetTitle(), rr.GetText())
 
-	log.Println("\n Get all StreamTodos")
-
-	//implement StreamTodos
-	stream, err := c.StreamTodos(context.Background(), &pb.GetAllTodosRequest{})
-	if err != nil {
-		log.Fatalf("could not found todos due to %v", err)
-	}
-
-	//read from stream
-	for {
-		todo, err := stream.Recv()
+		//use getToDo by id 1
+		log.Println("\n\n FEtching all todos")
+		rrr, err := c.GetAllTodos(context.Background(), &pb.GetAllTodosRequest{})
 		if err != nil {
 			log.Fatalf("could not found todos due to %v", err)
 		}
-		log.Printf("\n Stream todo: %s\n %s\n %s", todo.GetId(), todo.GetTitle(), todo.GetText())
+		log.Printf("\n All todos are : %s", rrr.Todos)
+
+	})
+
+	fmt.Println("http running on 3005")
+	if err := http.ListenAndServe(":3005", router); err != nil {
+		panic(err)
 	}
 
 }
