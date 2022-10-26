@@ -38,6 +38,7 @@ func main() {
 			log.Fatalf("could not greet: %v", err)
 		}
 
+		fmt.Fprint(w, rr.Text, rr.Title)
 		//log response
 		log.Printf("\nCreated todo: %s\n %s\n%s", rr.GetId(), rr.GetTitle(), rr.GetText())
 
@@ -47,6 +48,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("could not found todos due to %v", err)
 		}
+		fmt.Fprint(w, rrr)
 		log.Printf("\n All todos are : %s", rrr.Todos)
 
 	})
